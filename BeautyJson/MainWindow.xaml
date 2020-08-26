@@ -1,0 +1,87 @@
+﻿<Window x:Class="BeautyJson.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:BeautyJson.ViewModel"
+        xmlns:local="clr-namespace:BeautyJson"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Window.Resources>
+        <vm:MainViewModel x:Key="main" />
+        <DataTemplate x:Key="ResultTemplate" >
+            <StackPanel Orientation="Horizontal">
+                
+                
+            </StackPanel>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid x:Name="MainGrid" DataContext="{Binding Source={StaticResource main}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="100" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="10" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="700" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBox Text="{Binding Json}" Grid.Row="1" Grid.Column="0" TextWrapping="Wrap" AcceptsReturn="True"
+                 VerticalScrollBarVisibility="Visible">
+            <TextBox.Style>
+                <Style TargetType="TextBox" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                    <Style.Resources>
+                        <VisualBrush x:Key="CueBannerBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+                            <VisualBrush.Visual>
+                                <Label Content="JsonData" Foreground="LightGray" />
+                            </VisualBrush.Visual>
+                        </VisualBrush>
+                    </Style.Resources>
+                    <Style.Triggers>
+                        <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                            <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                        </Trigger>
+                        <Trigger Property="Text" Value="{x:Null}">
+                            <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter Property="Background" Value="White" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
+        <Button Content="Beauty" Command="{Binding BeautyJsonClickCommand}" Grid.Row="1" Grid.Column="1" />
+        <!-- <ListBox ItemsSource="{Binding DataCollection}" ItemTemplate="{StaticResource ResultTemplate}" Grid.Row="2" MinHeight="500" Background="Bisque" Grid.ColumnSpan="2" /> -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2">
+            <CheckBox IsChecked="{Binding FilterContentType}" Margin="5">只顯示html、js、json</CheckBox>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="包含指定內容"/><TextBox Text="{Binding FilterRule, UpdateSourceTrigger=PropertyChanged}" Width="300" Margin="5,0"/>
+            </StackPanel>
+        </StackPanel>
+        <DataGrid ItemsSource="{Binding DataCollection}" Grid.Row="3" Grid.ColumnSpan="2" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Connection">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding connection}" Command="{Binding Source={StaticResource main}, Path=ConnectionClickCommand}" CommandParameter="{Binding connection}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Method"    Binding="{Binding  request.method}"/>
+                <DataGridTextColumn Header="Url"    Binding="{Binding  request.url}" Width="300"/>
+                <DataGridTextColumn Header="Response Status Code"    Binding="{Binding response.status}"/>
+                <DataGridTextColumn Header="Response Content Type"    Binding="{Binding response.content.mimeType}"/>
+                <DataGridTextColumn Header="Response Content"    Binding="{Binding response.content.text}" Width="300"/>
+                <DataGridTextColumn Header="Priority"    Binding="{Binding _priority}"/>
+                <DataGridTextColumn Header="ServerIP"    Binding="{Binding serverIPAddress}"/>
+                <DataGridTextColumn Header="CostTime"    Binding="{Binding time}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+    </Grid>
+
+</Window>
