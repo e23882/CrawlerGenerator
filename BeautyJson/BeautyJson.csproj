@@ -10,4 +10,16 @@
       <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Page Update="View\UcShowJson.xaml">
+        <Generator></Generator>
+      </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="View\UcShowJson.xaml.cs">
+        <DependentUpon>UcShowJson.xaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

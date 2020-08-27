@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using BeautyJson.Command;
 using BeautyJson.DataModel;
+using BeautyJson.View;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -94,6 +94,125 @@ namespace BeautyJson.ViewModel
             }
         }
 
+        public RelayCommand ExportCommand
+        {
+            get
+            {
+                return new RelayCommand(ExportCommandAction);
+            }
+        }
+
+        private void ExportCommandAction(object obj)
+        {
+            string result = string.Empty;
+            string runQuery = string.Empty;
+            List<FunctionDataModel> ExistFunctionName = new List<FunctionDataModel>();
+            
+            result += "import requests\r\n\r\n";
+            
+            foreach (var item in DataCollection.Where(x=>!string.IsNullOrEmpty(x.connection)))
+            {
+                var count = ExistFunctionName.Where(x => x.Connection == item.connection).Count();
+                if (item.request.method == "Get")
+                {
+                    if (count == 0)
+                    {
+                        result += GenerateGetScript(item, "");    
+                        ExistFunctionName.Add(new FunctionDataModel()
+                        {
+                            Connection = item.connection,
+                            FunctionName = item.connection
+                        });
+                    }
+                    else
+                    {
+                        result += GenerateGetScript(item, $"_{count}");
+                        ExistFunctionName.Add(new FunctionDataModel()
+                        {
+                            Connection = item.connection,
+                            FunctionName = item.connection+"_{count+1}"
+                        });
+                    }
+                    
+                }
+                else
+                {
+                    if (count == 0)
+                    {
+                        result += GeneratePostScript(item, "");    
+                        ExistFunctionName.Add(new FunctionDataModel()
+                        {
+                            Connection = item.connection,
+                            FunctionName = item.connection
+                        });
+                    }
+                    else
+                    {
+                        result += GeneratePostScript(item, $"_{count}");
+                        ExistFunctionName.Add(new FunctionDataModel()
+                        {
+                            Connection = item.connection,
+                            FunctionName = item.connection+"_{count+1}"
+                        });
+                    }
+                }
+                
+                if (count == 0)
+                    runQuery += $"    Connection{item.connection}()\r\n";
+                else
+                    runQuery += $"    Connection{item.connection}_{count}()\r\n";
+            }
+
+            result += "if __name__ == '__main__':\r\n"+runQuery;
+            try
+            {
+                var ViewModel = new ShowJsonViewModel();
+                ViewModel.Result = result;
+                UcShowJson showJsonWindow = new UcShowJson();
+                showJsonWindow.Title = "Output";
+                showJsonWindow.DataContext = ViewModel; 
+                showJsonWindow.Show();
+            }
+            catch (Exception ie)
+            {
+                
+            }
+            
+        }
+
+        public string GenerateGetScript(Entry parameter, string subFunctionName)
+        {
+            string result = string.Empty;
+            result += $"def Connection{parameter.connection}{subFunctionName}():\r\n";
+            result += $"    url = '{parameter.request.url}'\r\n";
+            result += "    data = "+"{"+$""+"}"+"\r\n";
+            result += "    headers = "+"{"+$""+"}"+"\r\n";
+            result += "    response = requests.get(url, headers=headers, data=data)\r\n";
+            result += "    # globalCookie = response.cookies.get_dict()\r\n";
+            result += "    response.encoding = 'big5'\r\n\r\n";
+            result += "    if response.status_code == 200:\r\n";
+            result += $"        print('{parameter.connection} ok')\r\n";
+            result += "    else:\r\n";
+            result += $"        print('{parameter.connection} fail')\r\n\r\n";
+            return result;
+        }
+        public string GeneratePostScript(Entry parameter, string subFunctionName)
+        {
+            string result = string.Empty;
+            result += $"def Connection{parameter.connection}{subFunctionName}():\r\n";
+            result += $"    url = '{parameter.request.url}'\r\n";
+            result += "    params = "+"{"+$""+"}"+"\r\n";
+            result += "    headers = "+"{"+$""+"}"+"\r\n";
+            result += "    response = requests.post(url, headers=headers, params=params)\r\n";
+            result += "    # globalCookie = response.cookies.get_dict()\r\n";
+            result += "    response.encoding = 'big5'\r\n\r\n";
+            result += "    if response.status_code == 200:\r\n";
+            result += $"        print('{parameter.connection} ok')\r\n";
+            result += "    else:\r\n";
+            result += $"        print('{parameter.connection} fail')\r\n\r\n";
+            return result;
+        }
+
         #endregion
 
         #region Memberfunction
@@ -111,7 +230,25 @@ namespace BeautyJson.ViewModel
                 return;
             var dt = DataCollection.Where(x => x.connection == parameter).FirstOrDefault();
             var jsonText = JsonConvert.SerializeObject(dt, Formatting.Indented);
-            MessageBox.Show(jsonText);
+            ShowJsonResult(jsonText, parameter);
+        }
+
+        public bool ShowJsonResult(string parameter, string connectionID)
+        {
+            try
+            {
+                var ViewModel = new ShowJsonViewModel();
+                ViewModel.Result = parameter;
+                UcShowJson showJsonWindow = new UcShowJson();
+                showJsonWindow.Title = connectionID;
+                showJsonWindow.DataContext = ViewModel; 
+                showJsonWindow.Show();
+                return true;
+            }
+            catch (Exception ie)
+            {
+                return false;
+            }
         }
 
         private void BeautyJsonClickCommandAction(object obj)

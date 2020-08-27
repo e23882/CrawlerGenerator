@@ -4,20 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:BeautyJson.ViewModel"
+        xmlns:cv="clr-namespace:BeautyJson.Converter"
         xmlns:local="clr-namespace:BeautyJson"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
         <vm:MainViewModel x:Key="main" />
-        <DataTemplate x:Key="ResultTemplate" >
-            <StackPanel Orientation="Horizontal">
-                
-                
-            </StackPanel>
-        </DataTemplate>
+        <cv:StringNullOrEmptyToBoolConverter x:Key="st2bool"/>
     </Window.Resources>
 
-    <Grid x:Name="MainGrid" DataContext="{Binding Source={StaticResource main}}">
+    <Grid DataContext="{Binding Source={StaticResource main}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="10" />
             <RowDefinition Height="40" />
@@ -56,18 +52,21 @@
         </TextBox>
         <Button Content="Beauty" Command="{Binding BeautyJsonClickCommand}" Grid.Row="1" Grid.Column="1" />
         <!-- <ListBox ItemsSource="{Binding DataCollection}" ItemTemplate="{StaticResource ResultTemplate}" Grid.Row="2" MinHeight="500" Background="Bisque" Grid.ColumnSpan="2" /> -->
-        <StackPanel Grid.Row="2" Grid.ColumnSpan="2">
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal">
             <CheckBox IsChecked="{Binding FilterContentType}" Margin="5">只顯示html、js、json</CheckBox>
             <StackPanel Orientation="Horizontal" Margin="5">
                 <TextBlock Text="包含指定內容"/><TextBox Text="{Binding FilterRule, UpdateSourceTrigger=PropertyChanged}" Width="300" Margin="5,0"/>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <Button Content="Export Script" Command="{Binding ExportCommand}"/>
+            </StackPanel>
         </StackPanel>
-        <DataGrid ItemsSource="{Binding DataCollection}" Grid.Row="3" Grid.ColumnSpan="2" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding DataCollection}" Grid.Row="3" Grid.ColumnSpan="2" AutoGenerateColumns="False" CanUserAddRows="False" >
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Connection">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="{Binding connection}" Command="{Binding Source={StaticResource main}, Path=ConnectionClickCommand}" CommandParameter="{Binding connection}"/>
+                            <Button Content="{Binding connection}" IsEnabled="{Binding connection, Converter={StaticResource st2bool }}" Command="{Binding Source={StaticResource main}, Path=ConnectionClickCommand}" CommandParameter="{Binding connection}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

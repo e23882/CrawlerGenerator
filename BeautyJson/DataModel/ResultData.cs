@@ -3,12 +3,6 @@ using System.Collections.Generic;
 
 namespace BeautyJson.DataModel
 {
-    public class ResultData
-    {
-        public string Result { get; set; }
-    }
-
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
     public class Creator    {
         public string name { get; set; } 
         public string version { get; set; } 
@@ -141,8 +135,4 @@ namespace BeautyJson.DataModel
     public class Root    {
         public Log log { get; set; } 
     }
-
-
-        
-
 }
