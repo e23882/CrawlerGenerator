@@ -62,6 +62,7 @@
             </StackPanel>
         </StackPanel>
         <DataGrid ItemsSource="{Binding DataCollection}" Grid.Row="3" Grid.ColumnSpan="2" AutoGenerateColumns="False" CanUserAddRows="False" >
+            <DataGrid.RowHeight>30</DataGrid.RowHeight>
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Connection">
                     <DataGridTemplateColumn.CellTemplate>

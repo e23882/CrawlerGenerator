@@ -110,7 +110,7 @@ namespace BeautyJson.ViewModel
             
             result += "import requests\r\n\r\n";
             
-            foreach (var item in DataCollection.Where(x=>!string.IsNullOrEmpty(x.connection)))
+            foreach (var item in DataCollection.Where(x=>!string.IsNullOrEmpty(x.connection)).OrderBy(y=>y.connection))
             {
                 var count = ExistFunctionName.Where(x => x.Connection == item.connection).Count();
                 if (item.request.method == "Get")
@@ -182,12 +182,17 @@ namespace BeautyJson.ViewModel
 
         public string GenerateGetScript(Entry parameter, string subFunctionName)
         {
+            string headerString = string.Empty;
+            foreach (var item in parameter.request.headers)
+            {
+                headerString += $"'{item.name}':'{item.value}',";
+            }
             string result = string.Empty;
             result += $"def Connection{parameter.connection}{subFunctionName}():\r\n";
             result += $"    url = '{parameter.request.url}'\r\n";
             result += "    data = "+"{"+$""+"}"+"\r\n";
             result += "    headers = "+"{"+$""+"}"+"\r\n";
-            result += "    response = requests.get(url, headers=headers, data=data)\r\n";
+            result += "    response = requests.get(url, headers=headers, data=data, timeout = 3)\r\n";
             result += "    # globalCookie = response.cookies.get_dict()\r\n";
             result += "    response.encoding = 'big5'\r\n\r\n";
             result += "    if response.status_code == 200:\r\n";
@@ -198,12 +203,22 @@ namespace BeautyJson.ViewModel
         }
         public string GeneratePostScript(Entry parameter, string subFunctionName)
         {
+            string headerString = string.Empty;
+            string postDataString = string.Empty;
+            //整理header資料
+            foreach (var item in parameter.request.headers)
+            {
+                headerString += $"'{item.name}':'{item.value}',";
+            }
+            //整理params資料
+            postDataString = parameter.request.postData.text.Replace("=","':'").Replace("&","','");
+            postDataString = $"'{postDataString}'";
             string result = string.Empty;
             result += $"def Connection{parameter.connection}{subFunctionName}():\r\n";
             result += $"    url = '{parameter.request.url}'\r\n";
-            result += "    params = "+"{"+$""+"}"+"\r\n";
-            result += "    headers = "+"{"+$""+"}"+"\r\n";
-            result += "    response = requests.post(url, headers=headers, params=params)\r\n";
+            result += "    params = "+"{"+postDataString+"}"+"\r\n";
+            result += "    headers = "+"{"+headerString+"}"+"\r\n";
+            result += "    response = requests.post(url, headers=headers, params=params, timeout = 3)\r\n";
             result += "    # globalCookie = response.cookies.get_dict()\r\n";
             result += "    response.encoding = 'big5'\r\n\r\n";
             result += "    if response.status_code == 200:\r\n";
