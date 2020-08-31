@@ -16,10 +16,22 @@ namespace BeautyJson.ViewModel
         #region Declarations
 
         private string _Json = string.Empty;
-        private Root myDeserializedClass = null;
-        private ObservableCollection<Entry> _DataCollection = new ObservableCollection<Entry>();
-        private bool _FilterContentType = false;
         private string _FilterRule = string.Empty;
+
+        private bool _FilterContentType = false;
+        private bool _FilterDocument = false;
+        private bool _FilterStyleSheet = false;
+        private bool _FilterFont = false;
+        private bool _FilterImage = false;
+        private bool _FilterScript = false;
+        private bool _FilterXHR = false;
+        private bool _FilterOther = false;
+
+        private Root myDeserializedClass = null;
+
+        private ObservableCollection<Entry> _DataCollection = new ObservableCollection<Entry>();
+
+        private Entry _CurrentItem = new Entry();
 
         #endregion
 
@@ -35,41 +47,62 @@ namespace BeautyJson.ViewModel
             }
         }
 
+        public ObservableCollection<Entry> DataCollection
+        {
+            get
+            {
+                List<Entry> tempResult = _DataCollection.ToList();
+
+                if (FilterDocument == true)
+                    tempResult = tempResult.Where(x => x._resourceType != "document").ToList();
+                if (FilterFont == true)
+                    tempResult = tempResult.Where(x => x._resourceType != "font").ToList();
+                if (FilterImage == true)
+                    tempResult = tempResult.Where(x => x._resourceType != "image").ToList();
+                if (FilterOther == true)
+                    tempResult = tempResult.Where(x => x._resourceType != "other").ToList();
+                if (FilterScript == true)
+                    tempResult = tempResult.Where(x => x._resourceType != "script").ToList();
+                if (FilterStyleSheet == true)
+                    tempResult = tempResult.Where(x => x._resourceType != "stylesheet").ToList();
+                if (FilterXHR == true)
+                    tempResult = tempResult.Where(x => x._resourceType != "xhr").ToList();
+                if (!string.IsNullOrEmpty(FilterRule))
+                    tempResult = tempResult.Where(x => x.response.content.text.IndexOf(FilterRule) != -1).ToList();
+                if (FilterDocument == false && FilterFont == false && FilterImage == false && FilterOther == false &&
+                    FilterScript == false && FilterStyleSheet == false && FilterXHR == false &&
+                    string.IsNullOrEmpty(FilterRule))
+                    return _DataCollection;
+                else
+                    return new ObservableCollection<Entry>(tempResult);
+            }
+        }
+
         public RelayCommand BeautyJsonClickCommand
         {
             get { return new RelayCommand(BeautyJsonClickCommandAction); }
         }
 
-        public ObservableCollection<Entry> DataCollection
+
+        public Entry CurrentItem
         {
-            get
+            get { return _CurrentItem; }
+            set
             {
-                if (FilterContentType == true && !string.IsNullOrEmpty(FilterRule))
-                {
-                    ObservableCollection<Entry> temp = new ObservableCollection<Entry>(_DataCollection.Where(x =>
-                        (x.response.content.mimeType == "application/javascript" ||
-                         x.response.content.mimeType == "application/json" ||
-                         x.response.content.mimeType == "text/html") && 
-                        x.response.content.text.IndexOf(FilterRule)!=-1
-                        ));
-                    return temp;
-                }
-                else if (FilterContentType == true)
-                {
-                    ObservableCollection<Entry> temp = new ObservableCollection<Entry>(_DataCollection.Where(x =>
-                        x.response.content.mimeType == "application/javascript" ||
-                        x.response.content.mimeType == "application/json" ||
-                        x.response.content.mimeType == "text/html"));
-                    return temp;
-                }
-                else
-                    return _DataCollection;
+                _CurrentItem = value;
+                OnPropertyChanged();
             }
         }
+
 
         public RelayCommand ConnectionClickCommand
         {
             get { return new RelayCommand(ConnectionClickCommandAction); }
+        }
+
+        public RelayCommand ExportCommand
+        {
+            get { return new RelayCommand(ExportCommandAction); }
         }
 
         public string FilterRule
@@ -94,11 +127,80 @@ namespace BeautyJson.ViewModel
             }
         }
 
-        public RelayCommand ExportCommand
+        public bool FilterDocument
         {
-            get
+            get { return _FilterDocument; }
+            set
             {
-                return new RelayCommand(ExportCommandAction);
+                _FilterDocument = value;
+                OnPropertyChanged();
+                OnPropertyChanged("DataCollection");
+            }
+        }
+
+        public bool FilterStyleSheet
+        {
+            get { return _FilterStyleSheet; }
+            set
+            {
+                _FilterStyleSheet = value;
+                OnPropertyChanged();
+                OnPropertyChanged("DataCollection");
+            }
+        }
+
+        public bool FilterFont
+        {
+            get { return _FilterFont; }
+            set
+            {
+                _FilterFont = value;
+                OnPropertyChanged();
+                OnPropertyChanged("DataCollection");
+            }
+        }
+
+        public bool FilterImage
+        {
+            get { return _FilterImage; }
+            set
+            {
+                _FilterImage = value;
+                OnPropertyChanged();
+                OnPropertyChanged("DataCollection");
+            }
+        }
+
+        public bool FilterScript
+        {
+            get { return _FilterScript; }
+            set
+            {
+                _FilterScript = value;
+                OnPropertyChanged();
+                OnPropertyChanged("DataCollection");
+            }
+        }
+
+        public bool FilterXHR
+        {
+            get { return _FilterXHR; }
+            set
+            {
+                _FilterXHR = value;
+                OnPropertyChanged();
+                OnPropertyChanged("DataCollection");
+            }
+        }
+
+        public bool FilterOther
+        {
+            get { return _FilterOther; }
+            set
+            {
+                _FilterOther = value;
+                OnPropertyChanged();
+                OnPropertyChanged("DataCollection");
             }
         }
 
@@ -107,17 +209,16 @@ namespace BeautyJson.ViewModel
             string result = string.Empty;
             string runQuery = string.Empty;
             List<FunctionDataModel> ExistFunctionName = new List<FunctionDataModel>();
-            
+
             result += "import requests\r\n\r\n";
-            
-            foreach (var item in DataCollection.Where(x=>!string.IsNullOrEmpty(x.connection)).OrderBy(y=>y.connection))
+
+            foreach (var item in DataCollection.OrderBy(y => y.connection))
             {
-                var count = ExistFunctionName.Where(x => x.Connection == item.connection).Count();
-                if (item.request.method == "Get")
+                if (string.IsNullOrEmpty(item.connection))
                 {
-                    if (count == 0)
+                    if (item.request.method == "Get")
                     {
-                        result += GenerateGetScript(item, "");    
+                        result += GenerateGetScript(item, $"Temp{ExistFunctionName.Count+1}");
                         ExistFunctionName.Add(new FunctionDataModel()
                         {
                             Connection = item.connection,
@@ -126,58 +227,82 @@ namespace BeautyJson.ViewModel
                     }
                     else
                     {
-                        result += GenerateGetScript(item, $"_{count}");
+                        result += GeneratePostScript(item, $"Temp{ExistFunctionName.Count+1}");
                         ExistFunctionName.Add(new FunctionDataModel()
                         {
                             Connection = item.connection,
-                            FunctionName = item.connection+"_{count+1}"
+                            FunctionName = item.connection + "_{count+1}"
                         });
                     }
-                    
+
+                    runQuery += $"    ConnectionTemp{ExistFunctionName.Count}()\r\n";
                 }
                 else
                 {
-                    if (count == 0)
+                    var count = ExistFunctionName.Where(x => x.Connection == item.connection).Count();
+                    if (item.request.method == "Get")
                     {
-                        result += GeneratePostScript(item, "");    
-                        ExistFunctionName.Add(new FunctionDataModel()
+                        if (count == 0)
                         {
-                            Connection = item.connection,
-                            FunctionName = item.connection
-                        });
+                            result += GenerateGetScript(item, "");
+                            ExistFunctionName.Add(new FunctionDataModel()
+                            {
+                                Connection = item.connection,
+                                FunctionName = item.connection
+                            });
+                        }
+                        else
+                        {
+                            result += GenerateGetScript(item, $"_{count}");
+                            ExistFunctionName.Add(new FunctionDataModel()
+                            {
+                                Connection = item.connection,
+                                FunctionName = item.connection + "_{count+1}"
+                            });
+                        }
                     }
                     else
                     {
-                        result += GeneratePostScript(item, $"_{count}");
-                        ExistFunctionName.Add(new FunctionDataModel()
+                        if (count == 0)
                         {
-                            Connection = item.connection,
-                            FunctionName = item.connection+"_{count+1}"
-                        });
+                            result += GeneratePostScript(item, "");
+                            ExistFunctionName.Add(new FunctionDataModel()
+                            {
+                                Connection = item.connection,
+                                FunctionName = item.connection
+                            });
+                        }
+                        else
+                        {
+                            result += GeneratePostScript(item, $"_{count}");
+                            ExistFunctionName.Add(new FunctionDataModel()
+                            {
+                                Connection = item.connection,
+                                FunctionName = item.connection + "_{count+1}"
+                            });
+                        }
                     }
+
+                    if (count == 0)
+                        runQuery += $"    Connection{item.connection}()\r\n";
+                    else
+                        runQuery += $"    Connection{item.connection}_{count}()\r\n";
                 }
-                
-                if (count == 0)
-                    runQuery += $"    Connection{item.connection}()\r\n";
-                else
-                    runQuery += $"    Connection{item.connection}_{count}()\r\n";
             }
 
-            result += "if __name__ == '__main__':\r\n"+runQuery;
+            result += "if __name__ == '__main__':\r\n" + runQuery;
             try
             {
                 var ViewModel = new ShowJsonViewModel();
                 ViewModel.Result = result;
                 UcShowJson showJsonWindow = new UcShowJson();
                 showJsonWindow.Title = "Output";
-                showJsonWindow.DataContext = ViewModel; 
+                showJsonWindow.DataContext = ViewModel;
                 showJsonWindow.Show();
             }
             catch (Exception ie)
             {
-                
             }
-            
         }
 
         public string GenerateGetScript(Entry parameter, string subFunctionName)
@@ -185,13 +310,15 @@ namespace BeautyJson.ViewModel
             string headerString = string.Empty;
             foreach (var item in parameter.request.headers)
             {
-                headerString += $"'{item.name}':'{item.value}',";
+                if(item.name!="Content-Length")
+                    headerString += $"'{item.name}':'{item.value}',";
             }
+
             string result = string.Empty;
             result += $"def Connection{parameter.connection}{subFunctionName}():\r\n";
             result += $"    url = '{parameter.request.url}'\r\n";
-            result += "    data = "+"{"+$""+"}"+"\r\n";
-            result += "    headers = "+"{"+$""+"}"+"\r\n";
+            result += "    data = " + "{" + $"" + "}" + "\r\n";
+            result += "    headers = " + "{" + $"" + "}" + "\r\n";
             result += "    response = requests.get(url, headers=headers, data=data, timeout = 3)\r\n";
             result += "    # globalCookie = response.cookies.get_dict()\r\n";
             result += "    response.encoding = 'big5'\r\n\r\n";
@@ -201,6 +328,7 @@ namespace BeautyJson.ViewModel
             result += $"        print('{parameter.connection} fail')\r\n\r\n";
             return result;
         }
+
         public string GeneratePostScript(Entry parameter, string subFunctionName)
         {
             string headerString = string.Empty;
@@ -208,16 +336,19 @@ namespace BeautyJson.ViewModel
             //整理header資料
             foreach (var item in parameter.request.headers)
             {
-                headerString += $"'{item.name}':'{item.value}',";
+                if(item.name!="Content-Length")
+                    headerString += $"'{item.name}':'{item.value}',";
             }
+
             //整理params資料
-            postDataString = parameter.request.postData.text.Replace("=","':'").Replace("&","','");
+            if(parameter.request.postData != null)
+                postDataString = parameter.request.postData.text.Replace("=", "':'").Replace("&", "','").Replace("&", "','");
             postDataString = $"'{postDataString}'";
             string result = string.Empty;
             result += $"def Connection{parameter.connection}{subFunctionName}():\r\n";
             result += $"    url = '{parameter.request.url}'\r\n";
-            result += "    params = "+"{"+postDataString+"}"+"\r\n";
-            result += "    headers = "+"{"+headerString+"}"+"\r\n";
+            result += "    params = " + "{" + postDataString + "}" + "\r\n";
+            result += "    headers = " + "{" + headerString + "}" + "\r\n";
             result += "    response = requests.post(url, headers=headers, params=params, timeout = 3)\r\n";
             result += "    # globalCookie = response.cookies.get_dict()\r\n";
             result += "    response.encoding = 'big5'\r\n\r\n";
@@ -240,12 +371,12 @@ namespace BeautyJson.ViewModel
 
         private void ConnectionClickCommandAction(object obj)
         {
-            var parameter = obj as string;
-            if (parameter is null)
-                return;
-            var dt = DataCollection.Where(x => x.connection == parameter).FirstOrDefault();
-            var jsonText = JsonConvert.SerializeObject(dt, Formatting.Indented);
-            ShowJsonResult(jsonText, parameter);
+            var CurrentConnection = "No Connection";
+            var jsonText = JsonConvert.SerializeObject(CurrentItem, Formatting.Indented);
+
+            if (CurrentItem.connection != null)
+                CurrentConnection = CurrentItem.connection;
+            ShowJsonResult(jsonText, CurrentConnection);
         }
 
         public bool ShowJsonResult(string parameter, string connectionID)
@@ -256,7 +387,7 @@ namespace BeautyJson.ViewModel
                 ViewModel.Result = parameter;
                 UcShowJson showJsonWindow = new UcShowJson();
                 showJsonWindow.Title = connectionID;
-                showJsonWindow.DataContext = ViewModel; 
+                showJsonWindow.DataContext = ViewModel;
                 showJsonWindow.Show();
                 return true;
             }
@@ -274,6 +405,8 @@ namespace BeautyJson.ViewModel
             {
                 DataCollection.Add(item);
             }
+
+            DataCollection.OrderBy(x => x.startedDateTime);
         }
 
         #endregion

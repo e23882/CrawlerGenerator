@@ -10,7 +10,7 @@
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
         <vm:MainViewModel x:Key="main" />
-        <cv:StringNullOrEmptyToBoolConverter x:Key="st2bool"/>
+        <cv:StringNullOrEmptyToBoolConverter x:Key="st2bool" />
     </Window.Resources>
 
     <Grid DataContext="{Binding Source={StaticResource main}}">
@@ -18,6 +18,7 @@
             <RowDefinition Height="10" />
             <RowDefinition Height="40" />
             <RowDefinition Height="100" />
+            <RowDefinition Height="30" />
             <RowDefinition Height="*" />
             <RowDefinition Height="10" />
         </Grid.RowDefinitions>
@@ -53,35 +54,76 @@
         <Button Content="Beauty" Command="{Binding BeautyJsonClickCommand}" Grid.Row="1" Grid.Column="1" />
         <!-- <ListBox ItemsSource="{Binding DataCollection}" ItemTemplate="{StaticResource ResultTemplate}" Grid.Row="2" MinHeight="500" Background="Bisque" Grid.ColumnSpan="2" /> -->
         <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal">
-            <CheckBox IsChecked="{Binding FilterContentType}" Margin="5">只顯示html、js、json</CheckBox>
+            <WrapPanel Orientation="Vertical">
+                <CheckBox IsChecked="{Binding FilterDocument}" Margin="5">不顯示document</CheckBox>
+                <CheckBox IsChecked="{Binding FilterStyleSheet}" Margin="5">不顯示stylesheet</CheckBox>
+                <CheckBox IsChecked="{Binding FilterFont}" Margin="5">不顯示font</CheckBox>
+                <CheckBox IsChecked="{Binding FilterImage}" Margin="5">不顯示image</CheckBox>
+                <CheckBox IsChecked="{Binding FilterScript}" Margin="5">不顯示script</CheckBox>
+                <CheckBox IsChecked="{Binding FilterXHR}" Margin="5">不顯示xhr</CheckBox>
+                <CheckBox IsChecked="{Binding FilterOther}" Margin="5">不顯示other</CheckBox>
+            </WrapPanel>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <TextBlock Text="包含指定內容"/><TextBox Text="{Binding FilterRule, UpdateSourceTrigger=PropertyChanged}" Width="300" Margin="5,0"/>
+                <TextBox Text="{Binding FilterRule, UpdateSourceTrigger=PropertyChanged}" Width="300" Margin="5,0">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                            <Style.Resources>
+                                <VisualBrush x:Key="CueBannerBrush" AlignmentX="Left" AlignmentY="Center"
+                                             Stretch="None">
+                                    <VisualBrush.Visual>
+                                        <Label Content="Response包含內容" Foreground="LightGray" />
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </Style.Resources>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                    <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                </Trigger>
+                                <Trigger Property="Text" Value="{x:Null}">
+                                    <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter Property="Background" Value="White" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <Button Content="Export Script" Command="{Binding ExportCommand}"/>
+                <Button Content="Export Script" Command="{Binding ExportCommand}" />
             </StackPanel>
         </StackPanel>
-        <DataGrid ItemsSource="{Binding DataCollection}" Grid.Row="3" Grid.ColumnSpan="2" AutoGenerateColumns="False" CanUserAddRows="False" >
+        <TextBlock Grid.Row="3" Grid.ColumnSpan="2">
+            <TextBlock.Text>
+                <MultiBinding StringFormat="{}資料筆數 {0}">
+                    <Binding Path="DataCollection.Count"/>
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+        <DataGrid ItemsSource="{Binding DataCollection}" SelectedItem="{Binding CurrentItem}" Grid.Row="4" Grid.ColumnSpan="2" AutoGenerateColumns="False"
+                  CanUserAddRows="False">
             <DataGrid.RowHeight>30</DataGrid.RowHeight>
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Connection">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="{Binding connection}" IsEnabled="{Binding connection, Converter={StaticResource st2bool }}" Command="{Binding Source={StaticResource main}, Path=ConnectionClickCommand}" CommandParameter="{Binding connection}"/>
+                            <Button Content="{Binding connection}" Command="{Binding Source={StaticResource main}, Path=ConnectionClickCommand}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Method"    Binding="{Binding  request.method}"/>
-                <DataGridTextColumn Header="Url"    Binding="{Binding  request.url}" Width="300"/>
-                <DataGridTextColumn Header="Response Status Code"    Binding="{Binding response.status}"/>
-                <DataGridTextColumn Header="Response Content Type"    Binding="{Binding response.content.mimeType}"/>
-                <DataGridTextColumn Header="Response Content"    Binding="{Binding response.content.text}" Width="300"/>
-                <DataGridTextColumn Header="Priority"    Binding="{Binding _priority}"/>
-                <DataGridTextColumn Header="ServerIP"    Binding="{Binding serverIPAddress}"/>
-                <DataGridTextColumn Header="CostTime"    Binding="{Binding time}"/>
+                <DataGridTextColumn Header="Resource" Binding="{Binding _resourceType}" />
+                <DataGridTextColumn Header="Method" Binding="{Binding  request.method}" />
+                <DataGridTextColumn Header="Url" Binding="{Binding  request.url}" Width="300" />
+                <DataGridTextColumn Header="Response Status Code" Binding="{Binding response.status}" />
+                <DataGridTextColumn Header="Response Content Type" Binding="{Binding response.content.mimeType}" />
+                <DataGridTextColumn Header="Response Content" Binding="{Binding response.content.text}" Width="300" />
+                <DataGridTextColumn Header="Priority" Binding="{Binding _priority}" />
+                <DataGridTextColumn Header="ServerIP" Binding="{Binding serverIPAddress}" />
+                <DataGridTextColumn Header="CostTime" Binding="{Binding time}" />
             </DataGrid.Columns>
         </DataGrid>
-        
+
     </Grid>
 
 </Window>
