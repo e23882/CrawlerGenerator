@@ -323,9 +323,9 @@ namespace BeautyJson.ViewModel
             result += "    # globalCookie = response.cookies.get_dict()\r\n";
             result += "    response.encoding = 'big5'\r\n\r\n";
             result += "    if response.status_code == 200:\r\n";
-            result += $"        print('{parameter.connection} ok')\r\n";
+            result += $"        print('{parameter.connection}{subFunctionName} ok')\r\n";
             result += "    else:\r\n";
-            result += $"        print('{parameter.connection} fail')\r\n\r\n";
+            result += $"        print('{parameter.connection}{subFunctionName} fail')\r\n\r\n";
             return result;
         }
 
@@ -342,8 +342,8 @@ namespace BeautyJson.ViewModel
 
             //整理params資料
             if(parameter.request.postData != null)
-                postDataString = parameter.request.postData.text.Replace("=", "':'").Replace("&", "','").Replace("&", "','");
-            postDataString = $"'{postDataString}'";
+                postDataString = "'"+parameter.request.postData.text.Replace("=", "':'").Replace("&", "','").Replace("&", "','")+"'";
+            
             string result = string.Empty;
             result += $"def Connection{parameter.connection}{subFunctionName}():\r\n";
             result += $"    url = '{parameter.request.url}'\r\n";
@@ -353,9 +353,9 @@ namespace BeautyJson.ViewModel
             result += "    # globalCookie = response.cookies.get_dict()\r\n";
             result += "    response.encoding = 'big5'\r\n\r\n";
             result += "    if response.status_code == 200:\r\n";
-            result += $"        print('{parameter.connection} ok')\r\n";
+            result += $"        print('{parameter.connection}{subFunctionName} ok')\r\n";
             result += "    else:\r\n";
-            result += $"        print('{parameter.connection} fail')\r\n\r\n";
+            result += $"        print('{parameter.connection}{subFunctionName} fail')\r\n\r\n";
             return result;
         }
 
